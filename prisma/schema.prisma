@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  role         String
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  requests     RecommendationRequest[] @relation("RequestCreator")
+  auditLogs    AuditLog[]
+}
+
+model Doctor {
+  id                       String     @id @default(cuid())
+  name                     String
+  licenseNumber            String?
+  medicalInstitutionName   String
+  specialty                String
+  phone                    String
+  email                    String?
+  availableRegions         String?
+  availableDays            String?
+  maxFacilityCount         Int        @default(3)
+  currentFacilityCount     Int        @default(0)
+  educationStatus          String     @default("UNKNOWN")
+  status                   String     @default("NEEDS_REVIEW")
+  memo                     String?
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+  educationRecords         EducationRecord[]
+  candidates               RecommendationCandidate[]
+  assignments              Assignment[]
+  complaints               Complaint[]
+
+  @@index([name])
+  @@index([specialty])
+  @@index([status])
+  @@index([educationStatus])
+}
+
+model Facility {
+  id                  String     @id @default(cuid())
+  name                String
+  facilityType        String?
+  address             String
+  capacity            Int?
+  currentResidents    Int?
+  representativeName  String?
+  managerName         String?
+  phone               String
+  email               String?
+  status              String     @default("NORMAL")
+  memo                String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  recommendationRequests RecommendationRequest[]
+  assignments         Assignment[]
+  complaints          Complaint[]
+
+  @@index([name])
+  @@index([status])
+}
+
+model EducationRecord {
+  id                String   @id @default(cuid())
+  doctorId          String
+  courseName        String
+  completedAt       DateTime
+  certificateFileId String?
+  memo              String?
+  createdAt         DateTime @default(now())
+  doctor            Doctor   @relation(fields: [doctorId], references: [id])
+}
+
+model RecommendationRequest {
+  id                 String   @id @default(cuid())
+  facilityId         String
+  requestType        String
+  requestedSpecialty String?
+  preferredDays      String?
+  reason             String
+  status             String   @default("RECEIVED")
+  requestedAt        DateTime
+  reviewedAt         DateTime?
+  completedAt        DateTime?
+  memo               String?
+  createdBy          String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  facility           Facility @relation(fields: [facilityId], references: [id])
+  creator            User     @relation("RequestCreator", fields: [createdBy], references: [id])
+  candidates         RecommendationCandidate[]
+  assignments        Assignment[]
+
+  @@index([status])
+  @@index([requestType])
+  @@index([requestedAt])
+}
+
+model RecommendationCandidate {
+  id                      String   @id @default(cuid())
+  recommendationRequestId String
+  doctorId                String
+  rank                    Int
+  reason                  String?
+  selectedByAssociation   Boolean  @default(true)
+  sentToFacility          Boolean  @default(false)
+  createdAt               DateTime @default(now())
+  recommendationRequest   RecommendationRequest @relation(fields: [recommendationRequestId], references: [id], onDelete: Cascade)
+  doctor                  Doctor   @relation(fields: [doctorId], references: [id])
+
+  @@unique([recommendationRequestId, doctorId])
+  @@index([recommendationRequestId])
+}
+
+model Assignment {
+  id                       String   @id @default(cuid())
+  facilityId               String
+  doctorId                 String
+  recommendationRequestId  String?
+  contractStartDate        DateTime
+  contractEndDate          DateTime
+  status                   String   @default("ACTIVE")
+  registrationFee          Int?
+  registrationFeePaid      Boolean  @default(false)
+  contractFileId           String?
+  memo                     String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  facility                 Facility @relation(fields: [facilityId], references: [id])
+  doctor                   Doctor   @relation(fields: [doctorId], references: [id])
+  recommendationRequest    RecommendationRequest? @relation(fields: [recommendationRequestId], references: [id])
+  complaints               Complaint[]
+
+  @@index([status])
+  @@index([contractEndDate])
+}
+
+model Complaint {
+  id            String   @id @default(cuid())
+  facilityId    String
+  doctorId      String?
+  assignmentId  String?
+  type          String
+  title         String
+  content       String
+  status        String   @default("RECEIVED")
+  receivedAt    DateTime
+  resolvedAt    DateTime?
+  memo          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  facility      Facility @relation(fields: [facilityId], references: [id])
+  doctor        Doctor?  @relation(fields: [doctorId], references: [id])
+  assignment    Assignment? @relation(fields: [assignmentId], references: [id])
+
+  @@index([status])
+  @@index([type])
+}
+
+model Document {
+  id                String   @id @default(cuid())
+  type              String
+  fileName          String
+  filePath          String
+  mimeType          String
+  size              Int
+  relatedEntityType String
+  relatedEntityId   String
+  createdAt         DateTime @default(now())
+
+  @@index([type])
+  @@index([relatedEntityType, relatedEntityId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String
+  beforeJson  String?
+  afterJson   String?
+  createdAt   DateTime @default(now())
+  actor       User?    @relation(fields: [actorUserId], references: [id])
+
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
