@@ -407,3 +407,15 @@
 - 추천서 PDF 생성 시 Next 번들 내부에서 PDFKit 기본 폰트 파일을 찾지 못하던 문제를 `serverExternalPackages: ["pdfkit"]`로 해결.
 - 전체 관리자 UI를 밝은 카드형 CMS 스타일로 정리하고, cyan 포인트 컬러와 부드러운 그림자 중심의 카카오스타일 톤을 적용.
 - 검수: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build` 통과.
+
+### 2026-06-30 PostgreSQL migration 체계 정리
+- Prisma datasource를 SQLite에서 PostgreSQL로 전환.
+- SQLite 직접 초기화 스크립트 `prisma/init-sqlite.ts` 제거.
+- 정식 초기 migration `prisma/migrations/20260630000000_init_postgresql/migration.sql` 추가.
+- DB 명령을 `db:migrate`, `db:deploy`, `db:reset`, `db:studio`, `db:seed` 중심으로 정리.
+- PostgreSQL 운영/개발 절차 문서 `docs/database.md` 추가.
+- 로컬 PostgreSQL 기동용 `docker-compose.yml` 추가.
+- `.env.example`과 로컬 `.env`의 `DATABASE_URL`을 PostgreSQL URL 형식으로 변경.
+- 검수: `npx prisma validate`, `npm run db:generate`, `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build` 통과.
+- 추가 검수: `tests/postgres-migration.test.ts`에서 초기 migration SQL을 PGlite PostgreSQL 엔진에 적용하고 핵심 테이블/인덱스 생성 확인.
+- 환경 메모: 현재 로컬에는 `psql`/Docker가 없고 `127.0.0.1:5432` PostgreSQL 서버가 떠 있지 않아 실제 `db:deploy` 접속 검수는 수행 불가. PostgreSQL 서버 준비 후 `npm run db:deploy && npm run db:seed`를 실행해야 앱이 DB에 접속 가능.

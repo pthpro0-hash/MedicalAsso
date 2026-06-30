@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/server/auth";
 import { logoutAction } from "@/server/actions";
 import { roleLabels } from "@/server/constants";
 
+export const dynamic = "force-dynamic";
+
 const navItems = [
   { href: "/admin/dashboard", label: "대시보드", icon: BarChart3 },
   { href: "/admin/doctors", label: "촉탁의사 관리", icon: Stethoscope },
