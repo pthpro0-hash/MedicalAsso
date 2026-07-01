@@ -2,7 +2,7 @@ services:
   - type: web
     name: medical-asso
     runtime: node
-    plan: starter
+    plan: free
     buildCommand: npm ci && npm run build
     startCommand: npm run db:deploy && npm run db:bootstrap && npx next start -p $PORT
     healthCheckPath: /login
