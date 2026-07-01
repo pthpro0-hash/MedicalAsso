@@ -4,13 +4,32 @@
 
 This project is intended to run as a long-lived Node.js web service with PostgreSQL and persistent file storage.
 
-Recommended production target:
+Recommended production target for a durable production service:
 
 - Render Web Service
 - Render PostgreSQL
 - Render persistent disk mounted at `/var/data`
 
 Vercel is not the preferred target for the current MVP because generated recommendation PDFs are stored on the server filesystem.
+
+## Free Render Deployment
+
+The committed `render.yaml` is configured for Render Free:
+
+- Web service plan: `free`
+- PostgreSQL plan: `free`
+- Upload path: `/tmp/uploads`
+
+Free deployment is suitable for demos and review only. It is not a durable production setup.
+
+Important Free limitations:
+
+- The web service sleeps after a period of inactivity and needs time to wake up on the next request.
+- The web service filesystem is ephemeral. Generated PDFs stored under `/tmp/uploads` can be lost after restart, redeploy, or spin-down.
+- Free Render PostgreSQL databases expire after the free retention period. Back up or upgrade before expiration.
+- Persistent disks are not available for Free web services.
+
+For real operation, change the web service and database plans to paid plans and restore a persistent disk mount.
 
 ## GitHub
 
@@ -28,8 +47,7 @@ It defines:
 
 - Web service: `medical-asso`
 - PostgreSQL database: `medical-asso-db`
-- Persistent disk: `/var/data`
-- Runtime upload path: `/var/data/uploads`
+- Runtime upload path: `/tmp/uploads` on Free, or `/var/data/uploads` with a paid persistent disk
 - Build command: `npm ci && npm run build`
 - Start command: `npm run db:deploy && npm run db:bootstrap && npx next start -p $PORT`
 

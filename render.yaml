@@ -16,7 +16,7 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: UPLOAD_DIR
-        value: /var/data/uploads
+        value: /tmp/uploads
       - key: ADMIN_EMAIL
         value: admin@example.com
       - key: ADMIN_NAME
@@ -28,6 +28,5 @@ databases:
   - name: medical-asso-db
     databaseName: association_doctor_recommendation
     user: medical_asso
-    plan: basic-256mb
-    diskSizeGB: 1
+    plan: free
     postgresMajorVersion: "16"
