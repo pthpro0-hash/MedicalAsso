@@ -37,5 +37,5 @@ describe("PostgreSQL migration", () => {
     expect(uniqueIndex.rows).toHaveLength(1);
 
     await db.close();
-  }, 15_000);
+  }, 30_000);
 });

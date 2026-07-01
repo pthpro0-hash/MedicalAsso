@@ -6,6 +6,7 @@ import { prisma } from "@/server/db";
 import { signIn, signOut, requireUser } from "@/server/auth";
 import { writeAuditLog } from "@/server/audit";
 import { createRecommendationPdf } from "@/server/services/documents";
+import { getLoginFailureMessage } from "@/server/services/login-errors";
 import {
   assertCanManageUsers,
   assertCanMutate,
@@ -46,7 +47,13 @@ function ensureRequired(value: string, label: string) {
 }
 
 export async function loginAction(_prevState: { message: string }, formData: FormData) {
-  const result = await signIn(text(formData, "email"), text(formData, "password"));
+  let result: Awaited<ReturnType<typeof signIn>>;
+  try {
+    result = await signIn(text(formData, "email"), text(formData, "password"));
+  } catch (error) {
+    return { message: getLoginFailureMessage(error) };
+  }
+
   if (result.ok) redirect("/admin/dashboard");
   return { message: result.message };
 }
